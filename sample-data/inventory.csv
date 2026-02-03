@@ -1,0 +1,38 @@
+mac_address,ip_address,hostname,vendor,vlan,switch_port,device_type,flag,flag_reason,discovery_sources,oui
+00:1e:67:aa:11:01,192.168.1.1,core-rtr-01,Cisco Systems Inc,1,Gi0/1,,,,"arp,switch",001E67
+00:1e:67:aa:11:02,192.168.1.2,core-sw-01,Cisco Systems Inc,1,Gi0/2,,,,"arp,switch",001E67
+00:1b:44:bb:22:01,192.168.1.5,fw-01,SonicWALL,1,Gi0/3,,,,"arp,switch",001B44
+d4:be:d9:cc:33:01,192.168.10.10,dc-srv-01,Dell Inc.,10,Gi0/10,,,,"arp,switch",D4BED9
+d4:be:d9:cc:33:02,192.168.10.11,dc-srv-02,Dell Inc.,10,Gi0/11,,,,"arp,switch",D4BED9
+00:50:56:dd:44:01,192.168.10.20,esxi-01,VMware Inc.,10,Gi0/12,,,,"arp,switch",005056
+00:50:56:dd:44:02,192.168.10.21,esxi-02,VMware Inc.,10,Gi0/13,,,,"arp,switch",005056
+b4:96:91:ee:55:01,192.168.50.101,ws-front-01,Dell Inc.,50,Gi1/1,,,,"arp,dhcp,switch",B49691
+b4:96:91:ee:55:02,192.168.50.102,ws-front-02,Dell Inc.,50,Gi1/2,,,,"arp,dhcp,switch",B49691
+b4:96:91:ee:55:03,192.168.50.103,ws-eng-01,Dell Inc.,50,Gi1/3,,,,"arp,dhcp,switch",B49691
+b4:96:91:ee:55:04,192.168.50.104,ws-eng-02,Dell Inc.,50,Gi1/4,,,,"arp,dhcp,switch",B49691
+b4:96:91:ee:55:05,192.168.50.105,ws-shipping-01,Dell Inc.,50,Gi1/5,,,,"arp,dhcp,switch",B49691
+10:e7:c6:ff:66:01,192.168.50.110,laptop-smith,HP Inc.,50,Gi1/6,,,,"arp,dhcp,switch",10E7C6
+10:e7:c6:ff:66:02,192.168.50.111,laptop-jones,HP Inc.,50,Gi1/7,,,,"arp,dhcp,switch",10E7C6
+10:e7:c6:ff:66:03,192.168.50.112,laptop-chen,HP Inc.,50,Gi1/8,,,,"arp,dhcp,switch",10E7C6
+00:17:88:11:77:01,192.168.50.120,print-main,Philips Lighting BV,50,Gi1/9,,,,"arp,switch",001788
+00:17:88:11:77:02,192.168.50.121,print-eng,Philips Lighting BV,50,Gi1/10,,,,"arp,switch",001788
+20:a6:cd:22:88:01,192.168.50.130,ap-lobby-01,Aruba Networks,50,Gi1/11,,,,"arp,switch",20A6CD
+20:a6:cd:22:88:02,192.168.50.131,ap-warehouse-01,Aruba Networks,50,Gi1/12,,,,"arp,switch",20A6CD
+44:d9:e7:33:99:01,192.168.50.140,phone-recept,Cisco Systems Inc,50,Gi1/13,,,,"arp,switch",44D9E7
+44:d9:e7:33:99:02,192.168.50.141,phone-eng-01,Cisco Systems Inc,50,Gi1/14,,,,"arp,switch",44D9E7
+c4:73:1e:aa:aa:01,192.168.50.200,,Hangzhou Hikvision Digital Technology Co.,50,Gi1/20,,HIKVISION,Chinese surveillance equipment manufacturer,"arp,dhcp,switch",C4731E
+c4:73:1e:aa:aa:02,192.168.50.201,,Hangzhou Hikvision Digital Technology Co.,50,Gi1/21,,HIKVISION,Chinese surveillance equipment manufacturer,"arp,dhcp,switch",C4731E
+c4:73:1e:aa:aa:03,192.168.50.202,,Hangzhou Hikvision Digital Technology Co.,50,Gi1/22,,HIKVISION,Chinese surveillance equipment manufacturer,"arp,dhcp,switch",C4731E
+a4:14:37:bb:bb:01,192.168.50.210,,Hangzhou Hikvision Digital Technology Co.,50,Gi1/23,,HIKVISION,Chinese surveillance equipment manufacturer,"arp,switch",A41437
+54:ef:44:cc:cc:01,192.168.50.220,nest-thermostat,Lumi United Technology Co.,50,Gi1/24,,,,"arp,dhcp,switch",54EF44
+fc:65:de:dd:dd:01,192.168.50.221,ring-doorbell,Ring LLC,50,Gi2/1,,RING,Amazon Ring consumer IoT,"arp,dhcp,switch",FC65DE
+30:ae:a4:ee:ee:01,192.168.50.230,,Espressif Inc.,50,Gi2/2,,ESPRESSIF,ESP32/ESP8266 IoT modules - homebrew or cheap IoT,"arp,dhcp,switch",30AEA4
+30:ae:a4:ee:ee:02,192.168.50.231,,Espressif Inc.,50,Gi2/3,,ESPRESSIF,ESP32/ESP8266 IoT modules - homebrew or cheap IoT,"arp,dhcp,switch",30AEA4
+b8:27:eb:ff:ff:01,192.168.50.240,,Raspberry Pi Foundation,50,Gi2/4,,RASPBERRY,Raspberry Pi - could be legitimate or shadow IT,"arp,dhcp,switch",B827EB
+00:11:22:33:44:55,192.168.50.250,,Cimsys Inc,50,Gi2/5,,,,"arp,switch",001122
+00:de:ad:be:ef:01,192.168.50.251,,UNKNOWN,50,Gi2/6,,,,"arp,switch",00DEAD
+34:97:f6:11:11:01,192.168.100.10,badge-reader-01,HID Global,100,Gi2/10,,,,"arp,switch",3497F6
+34:97:f6:11:11:02,192.168.100.11,badge-reader-02,HID Global,100,Gi2/11,,,,"arp,switch",3497F6
+00:40:84:22:22:01,192.168.100.20,plc-line-01,Siemens AG,100,Gi2/12,,,,"arp,switch",004084
+00:40:84:22:22:02,192.168.100.21,plc-line-02,Siemens AG,100,Gi2/13,,,,"arp,switch",004084
+7c:dd:90:33:33:01,192.168.100.30,hmi-panel-01,Rockwell Automation,100,Gi2/14,,,,"arp,switch",7CDD90

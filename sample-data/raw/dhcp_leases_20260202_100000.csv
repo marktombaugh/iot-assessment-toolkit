@@ -1,0 +1,17 @@
+mac_address,ip_address,hostname,lease_expiry,source
+b4:96:91:ee:55:01,192.168.50.101,ws-front-01,Feb 03 2026 10:00 AM,cisco
+b4:96:91:ee:55:02,192.168.50.102,ws-front-02,Feb 03 2026 10:00 AM,cisco
+b4:96:91:ee:55:03,192.168.50.103,ws-eng-01,Feb 03 2026 10:00 AM,cisco
+b4:96:91:ee:55:04,192.168.50.104,ws-eng-02,Feb 03 2026 10:00 AM,cisco
+b4:96:91:ee:55:05,192.168.50.105,ws-shipping-01,Feb 03 2026 10:00 AM,cisco
+10:e7:c6:ff:66:01,192.168.50.110,laptop-smith,Feb 03 2026 10:00 AM,cisco
+10:e7:c6:ff:66:02,192.168.50.111,laptop-jones,Feb 03 2026 10:00 AM,cisco
+10:e7:c6:ff:66:03,192.168.50.112,laptop-chen,Feb 03 2026 10:00 AM,cisco
+c4:73:1e:aa:aa:01,192.168.50.200,,Feb 03 2026 10:00 AM,cisco
+c4:73:1e:aa:aa:02,192.168.50.201,,Feb 03 2026 10:00 AM,cisco
+c4:73:1e:aa:aa:03,192.168.50.202,,Feb 03 2026 10:00 AM,cisco
+54:ef:44:cc:cc:01,192.168.50.220,nest-thermostat,Feb 03 2026 10:00 AM,cisco
+fc:65:de:dd:dd:01,192.168.50.221,ring-doorbell,Feb 03 2026 10:00 AM,cisco
+30:ae:a4:ee:ee:01,192.168.50.230,,Feb 03 2026 10:00 AM,cisco
+30:ae:a4:ee:ee:02,192.168.50.231,,Feb 03 2026 10:00 AM,cisco
+b8:27:eb:ff:ff:01,192.168.50.240,,Feb 03 2026 10:00 AM,cisco
