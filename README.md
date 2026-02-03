@@ -144,7 +144,7 @@ MIT License — use it, modify it, sell services with it. Attribution appreciate
 
 ## Author
 
-Bath McCollough | IoT & Physical Security Assessment
+Mark Tombaugh | IoT & Physical Security Assessment
 Raleigh, NC
 
 ---
