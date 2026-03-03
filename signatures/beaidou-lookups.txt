@@ -1,0 +1,11 @@
+# Detects known Chinese A-GNSS client library (Example Hash)
+alert tls $HOME_NET any -> $EXTERNAL_NET 443 (msg:"[IO-PSYCHE] Encrypted BeiDou Ephemeris Lookup (JA3)"; \
+    ja3.hash; content:"e7d705a3286e19ea42f587b344ee6865"; \
+    target:src_ip; classtype:policy-violation; sid:20260305; rev:1;)
+# Detects DNS queries for Chinese/BeiDou assistance servers
+alert udp $HOME_NET any -> any 53 (msg:"[IO-PSYCHE] BDS A-GNSS Infrastructure Lookup Detected"; \
+    dns_query; content:"beidou.gov.cn"; nocase; \
+    classtype:policy-violation; sid:20260301; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"[IO-PSYCHE] Possible CN-GNSS Assistance Server Lookup"; \
+    dns_query; pcre:"/.*(gnss|agps|beidou).*\.cn$/i"; \
+    classtype:suspicious-filename-detect; sid:20260302; rev:1;)    
