@@ -34,3 +34,10 @@ alert ip $HOME_NET any -> [111.91.0.0/18, 114.119.128.0/19, 119.8.32.0/19, 124.2
     threshold: type limit, track by_src, count 1, seconds 3600; \
     metadata:threat_model internet_of_psyche, target_asset pnt_infrastructure; \
     classtype:policy-violation; sid:20260320; rev:1;)
+# Detects PNT data jumps following a BDS infrastructure heartbeat
+# Requires a host-based agent to feed NMEA 'GPRMC' or 'BDRMC' data into the stream
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"[IO-PSYCHE] Possible PNT Hijack: Post-Heartbeat Drift"; \
+    flowbits:isset,bds_heartbeat_seen; \
+    pcre:"/\$BDRMC,[0-9.]+,[AV],[0-9.]+ [^,]+,[0-9.]+ [^,]+,[0-9.]+,[0-9.]+,[0-9]{6}/"; \
+    threshold: type limit, track by_src, count 1, seconds 60; \
+    classtype:targeted-activity; sid:20260325; rev:1;)
