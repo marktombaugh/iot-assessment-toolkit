@@ -21,3 +21,8 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 7275 (msg:"[IO-PSYCHE] BDS/GNSS Pre-Loo
     pcre:"/^\x00[\x01\x02]/"; \
     metadata:service ulp, threat_model internet_of_psyche; \
     classtype:policy-violation; sid:20260310; rev:1;)
+# Detects TLS handshake with known Chinese GNSS assistance CDNs
+alert tls $HOME_NET any -> $EXTERNAL_NET 443 (msg:"[IO-PSYCHE] Directional GNSS Certificate Detected"; \
+    tls.sni; content:".dbankcloud.cn"; nocase; \
+    tls.cert_subject; content:"Huawei Cloud"; \
+    classtype:suspicious-filename-detect; sid:20260312; rev:1;)
