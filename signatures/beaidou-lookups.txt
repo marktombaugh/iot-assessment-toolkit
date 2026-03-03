@@ -13,3 +13,11 @@ alert udp $HOME_NET any -> any 53 (msg:"[IO-PSYCHE] Possible CN-GNSS Assistance 
 alert tcp $HOME_NET any -> $EXTERNAL_NET [7275,7276] (msg:"[IO-PSYCHE] High-Fidelity SUPL/LPP Session Detected"; \
     flow:established,to_server; dsize:>100; \
     metadata:service supl; classtype:policy-violation; sid:20260310; rev:1;)
+# Detects the initiation of a SUPL/LPP location request (OMA-ULP)
+# Targets the "msSUPLSTART" message which is cleartext in the TCP stream
+alert tcp $HOME_NET any -> $EXTERNAL_NET 7275 (msg:"[IO-PSYCHE] BDS/GNSS Pre-Lookup (SUPL START)"; \
+    flow:to_server,established; \
+    content:"|00|"; offset:2; depth:1; \
+    pcre:"/^\x00[\x01\x02]/"; \
+    metadata:service ulp, threat_model internet_of_psyche; \
+    classtype:policy-violation; sid:20260310; rev:1;)
