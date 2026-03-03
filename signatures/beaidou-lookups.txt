@@ -8,4 +8,8 @@ alert udp $HOME_NET any -> any 53 (msg:"[IO-PSYCHE] BDS A-GNSS Infrastructure Lo
     classtype:policy-violation; sid:20260301; rev:1;)
 alert udp $HOME_NET any -> any 53 (msg:"[IO-PSYCHE] Possible CN-GNSS Assistance Server Lookup"; \
     dns_query; pcre:"/.*(gnss|agps|beidou).*\.cn$/i"; \
-    classtype:suspicious-filename-detect; sid:20260302; rev:1;)    
+    classtype:suspicious-filename-detect; sid:20260302; rev:1;)
+# Detects the initiation of an encrypted SUPL session to common A-GNSS ports
+alert tcp $HOME_NET any -> $EXTERNAL_NET [7275,7276] (msg:"[IO-PSYCHE] High-Fidelity SUPL/LPP Session Detected"; \
+    flow:established,to_server; dsize:>100; \
+    metadata:service supl; classtype:policy-violation; sid:20260310; rev:1;)
