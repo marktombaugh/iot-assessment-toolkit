@@ -55,3 +55,11 @@ INFO,STATIC_IP,34:97:f6:11:11:02,192.168.100.11,badge-reader-02,HID Global,100,D
 INFO,STATIC_IP,00:40:84:22:22:01,192.168.100.20,plc-line-01,Siemens AG,100,Device has IP but not in DHCP leases. Likely static IP.,Verify static IP is documented and authorized.
 INFO,STATIC_IP,00:40:84:22:22:02,192.168.100.21,plc-line-02,Siemens AG,100,Device has IP but not in DHCP leases. Likely static IP.,Verify static IP is documented and authorized.
 INFO,STATIC_IP,7c:dd:90:33:33:01,192.168.100.30,hmi-panel-01,Rockwell Automation,100,Device has IP but not in DHCP leases. Likely static IP.,Verify static IP is documented and authorized.
+Timestamp,Device_ID,IP_Address,MAC_Address,Vendor_OUI,Anomaly_Type,Severity,Description,Deterministic_Signature,Recommended_Action
+2026-03-03T00:00:05Z,NAV-SENS-04,192.168.50.42,BC:E5:9F:XX:XX:XX,HiSilicon,PNT_HEARTBEAT,CRITICAL,Autonomous BDS-3 Ephemeris Sync detected at BDT 00:00.,Temporal Correlation: BDT_Clock_Sync (±5s),Isolate device from VLAN 50; Audit firmware for R2-Backdoor.
+2026-03-03T01:12:15Z,IOT-CAM-09,192.168.100.12,B4:A3:82:XX:XX:XX,Hikvision,NDA_VIOLATION,HIGH,Device presence on Secure Production VLAN (VLAN 100).,OUI_Flag: Hikvision_NDAA,Relocate to isolated IoT Sandbox (VLAN 999).
+2026-03-03T02:00:10Z,PLT-GATE-01,10.0.2.15,00:25:9C:XX:XX:XX,Quectel,SUPL_LEAK,CRITICAL,Outbound SUPL START session on Port 7275 to Huawei-CDN.,Protocol_Match: msSUPLSTART (Offset 0x0001),Block CIDR 114.119.128.0/19; Initiate R3-Operator-Validation.
+2026-03-03T03:45:22Z,UNKNOWN-01,192.168.50.88,D4:EE:07:XX:XX:XX,Espressif,SHADOW_IT,MEDIUM,Unauthorized ESP32 module detected near NAV-COMMS rack.,OUI_Flag: Espressif_Generic,Physically locate and remove device; Check for unauthorized sensors.
+2026-03-03T04:00:02Z,NAV-SENS-04,192.168.50.42,BC:E5:9F:XX:XX:XX,HiSilicon,PNT_HEARTBEAT,CRITICAL,Recurrent BDT-aligned clock sync (2hr cycle confirmed).,Temporal Correlation: BDT_Clock_Sync,Permanent removal from critical PNT path.
+2026-03-03T05:20:11Z,OFFICE-PRNT,192.168.10.22,00:1A:A0:XX:XX:XX,HP,POLICY_VIOLATION,LOW,Printer hosting unauthorized HTTP server on Port 8080.,Port_Scan: Unexpected_Open_Port,Disable web services; Update printer firmware.
+
