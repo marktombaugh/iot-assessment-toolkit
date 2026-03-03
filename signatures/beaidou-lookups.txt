@@ -26,3 +26,11 @@ alert tls $HOME_NET any -> $EXTERNAL_NET 443 (msg:"[IO-PSYCHE] Directional GNSS 
     tls.sni; content:".dbankcloud.cn"; nocase; \
     tls.cert_subject; content:"Huawei Cloud"; \
     classtype:suspicious-filename-detect; sid:20260312; rev:1;)
+# Detects traffic to known Huawei/BDS-3 Assistance CIDRs
+# Covering Singapore, Hong Kong, and Shenzhen egress points
+alert ip $HOME_NET any -> [111.91.0.0/18, 114.119.128.0/19, 119.8.32.0/19, 124.243.128.0/18] any ( \
+    msg:"[IO-PSYCHE] Deterministic BDS Infrastructure Connection"; \
+    flow:to_server,established; \
+    threshold: type limit, track by_src, count 1, seconds 3600; \
+    metadata:threat_model internet_of_psyche, target_asset pnt_infrastructure; \
+    classtype:policy-violation; sid:20260320; rev:1;)
