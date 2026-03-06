@@ -1,0 +1,458 @@
+# =============================================================================
+# OpenClaw / MoltBot / Clawdbot Detection Rules
+# Suricata >= 6.0 syntax (compatible with Snort 2.9+ with minor adjustments)
+#
+# Coverage strategy:
+#   1. DNS  - domain lookups for known OpenClaw infrastructure
+#   2. HTTP - API calls to LLM providers (Anthropic, OpenAI)
+#   3. HTTP - OpenClaw-specific HTTP traffic and user-agents
+#   4. TCP  - Gateway WebSocket on default port 18789
+#   5. TCP  - Telegram Bot API (primary OpenClaw comms channel)
+#   6. TCP  - Other messaging channels (WhatsApp, Signal, iMessage relay)
+#   7. HTTP - Skill/plugin marketplace and update calls
+#   8. DNS  - Catch-all for LLM provider domains (shadow AI, not just OpenClaw)
+#
+# SID range: 9001000-9001099 (adjust to your local SID policy)
+#
+# FALSE POSITIVE NOTES are inline where applicable.
+# Tested against: Suricata 7.x, ET ruleset format
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 1: DNS — OpenClaw-specific domains
+# Low false positive risk. These domains have no legitimate use outside OpenClaw.
+# -----------------------------------------------------------------------------
+
+alert dns any any -> any 53 (
+    msg:"OPENCLAW DNS lookup openclaw.ai";
+    dns.query; content:"openclaw.ai"; nocase;
+    sid:9001000; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"OPENCLAW DNS lookup moltbot.ai";
+    dns.query; content:"moltbot.ai"; nocase;
+    sid:9001001; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"OPENCLAW DNS lookup clawdbot legacy domain";
+    dns.query; content:"clawdbot"; nocase;
+    sid:9001002; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"OPENCLAW DNS lookup docs.openclaw.ai";
+    dns.query; content:"docs.openclaw.ai"; nocase;
+    sid:9001003; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Informational, tag Shadow_AI;
+)
+
+# Skills/plugin marketplace — stock OpenClaw checks this for skill updates
+alert dns any any -> any 53 (
+    msg:"OPENCLAW DNS lookup skills marketplace";
+    dns.query; content:"skills.openclaw.ai"; nocase;
+    sid:9001004; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 2: HTTP — LLM Provider API calls
+#
+# !! HIGH FALSE POSITIVE RISK for rules 9001010 and 9001011 !!
+# Any developer or tool using the Anthropic/OpenAI API will trigger these.
+# RECOMMENDED USE: Enable only on OT/ICS network segments, manufacturing floors,
+# or any subnet where LLM API calls should NEVER occur (e.g. CMMC environments).
+# Disable or move to a separate policy for general corporate networks.
+# -----------------------------------------------------------------------------
+
+# -- Anthropic API --
+# CAUTION: Will fire on Claude Code, any Anthropic SDK usage, not just OpenClaw
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Outbound Anthropic API call - review for unauthorized agent";
+    http.host; content:"api.anthropic.com"; nocase;
+    http.uri; content:"/v1/messages"; nocase;
+    flow:established,to_server;
+    sid:9001010; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity High, tag Shadow_AI;
+)
+
+# -- OpenAI API --
+# CAUTION: Same caveat as above. Very common legitimate use.
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Outbound OpenAI API call - review for unauthorized agent";
+    http.host; content:"api.openai.com"; nocase;
+    http.uri; content:"/v1/chat/completions"; nocase;
+    flow:established,to_server;
+    sid:9001011; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity High, tag Shadow_AI;
+)
+
+# -- Anthropic API with OpenClaw-specific model strings in body --
+# Lower FP risk than 9001010 — catches the specific model names OpenClaw uses
+# by default. Still possible to trigger from other tools using these models.
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW HTTP POST to Anthropic API with claude model reference";
+    http.host; content:"api.anthropic.com"; nocase;
+    http.request_body; content:"claude"; nocase;
+    flow:established,to_server;
+    http.method; content:"POST";
+    sid:9001012; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Medium, tag Shadow_AI;
+)
+
+# -- OpenRouter (commonly used as an LLM proxy in OpenClaw setups) --
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Outbound OpenRouter API call";
+    http.host; content:"openrouter.ai"; nocase;
+    http.uri; content:"/api/v1"; nocase;
+    flow:established,to_server;
+    sid:9001013; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Medium, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 3: HTTP — OpenClaw-specific HTTP patterns
+# Lower false positive risk — these strings are specific to OpenClaw internals.
+# -----------------------------------------------------------------------------
+
+# OpenClaw gateway dashboard HTTP requests
+alert http any any -> any any (
+    msg:"OPENCLAW HTTP request to gateway dashboard";
+    http.uri; content:"/openclaw"; nocase;
+    flow:established,to_server;
+    sid:9001020; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Major, tag Shadow_AI;
+)
+
+# OpenClaw User-Agent string (stock installs send this)
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW User-Agent detected in HTTP request";
+    http.user_agent; content:"openclaw"; nocase;
+    flow:established,to_server;
+    sid:9001021; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW legacy Clawdbot User-Agent detected";
+    http.user_agent; content:"clawdbot"; nocase;
+    flow:established,to_server;
+    sid:9001022; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW legacy Moltbot User-Agent detected";
+    http.user_agent; content:"moltbot"; nocase;
+    flow:established,to_server;
+    sid:9001023; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+# Bundle ID patterns seen in HTTP headers from macOS OpenClaw app
+alert http any any -> any any (
+    msg:"OPENCLAW macOS app bundle ID in HTTP header";
+    http.header_names; content:"X-OpenClaw"; nocase;
+    flow:established,to_server;
+    sid:9001024; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Major, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 4: TCP — OpenClaw Gateway WebSocket (port 18789)
+#
+# This is the most reliable low-FP signal. Port 18789 is OpenClaw's default
+# and non-standard enough that legitimate traffic is extremely unlikely.
+# The WebSocket upgrade pattern makes it even more specific.
+# -----------------------------------------------------------------------------
+
+# Internal gateway WebSocket connection (local agent connecting to gateway)
+alert tcp $HOME_NET any -> $HOME_NET 18789 (
+    msg:"OPENCLAW WebSocket connection to gateway port 18789";
+    flow:established,to_server;
+    content:"Upgrade|3a 20|websocket"; nocase;
+    sid:9001030; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Critical, tag Shadow_AI;
+)
+
+# Any TCP to 18789 even without WS upgrade (raw gateway comms or health checks)
+alert tcp $HOME_NET any -> any 18789 (
+    msg:"OPENCLAW TCP connection to default gateway port 18789";
+    flow:established,to_server;
+    sid:9001031; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Major, tag Shadow_AI;
+)
+
+# Inbound to 18789 — exposed gateway (severe misconfig, matches known vuln pattern)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 18789 (
+    msg:"OPENCLAW EXPOSED GATEWAY inbound connection to port 18789 - critical misconfiguration";
+    flow:established,to_server;
+    sid:9001032; rev:1;
+    metadata:affected_product OpenClaw, attack_target Server,
+              deployment Perimeter, signature_severity Critical, tag Shadow_AI;
+)
+
+# Tailscale-exposed gateway (OpenClaw commonly uses Tailscale Funnel for remote access)
+# !! MODERATE FALSE POSITIVE RISK — other Tailscale services use similar patterns !!
+alert dns any any -> any 53 (
+    msg:"OPENCLAW possible Tailscale-exposed gateway DNS lookup";
+    dns.query; content:".ts.net"; nocase;
+    dns.query; content:"openclaw"; nocase;
+    sid:9001033; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Medium, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 5: TCP/HTTP — Telegram Bot API
+#
+# OpenClaw's most common comms channel is Telegram. These rules catch the bot
+# API calls the agent makes to receive and send messages.
+#
+# !! MODERATE FALSE POSITIVE RISK !!
+# Any Telegram bot (not just OpenClaw) will match 9001040.
+# Rules 9001041-9001042 are more specific and lower FP risk.
+# Consider suppressing 9001040 on networks where Telegram bots are expected.
+# -----------------------------------------------------------------------------
+
+# Generic Telegram Bot API call — catches all bots, not just OpenClaw
+# CAUTION: Suppress this on networks with legitimate Telegram bots
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Telegram Bot API call - potential agent comms channel";
+    http.host; content:"api.telegram.org"; nocase;
+    http.uri; content:"/bot"; nocase;
+    flow:established,to_server;
+    sid:9001040; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Medium, tag Shadow_AI;
+)
+
+# Telegram long-polling (getUpdates) — characteristic of OpenClaw's event loop
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW Telegram Bot getUpdates long-poll - agent message loop";
+    http.host; content:"api.telegram.org"; nocase;
+    http.uri; content:"getUpdates"; nocase;
+    flow:established,to_server;
+    sid:9001041; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Medium, tag Shadow_AI;
+)
+
+# Telegram sendMessage from internal host (agent responding to commands)
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW Telegram Bot sendMessage - agent outbound response";
+    http.host; content:"api.telegram.org"; nocase;
+    http.uri; content:"sendMessage"; nocase;
+    flow:established,to_server;
+    sid:9001042; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Medium, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 6: Other messaging channels OpenClaw supports
+#
+# !! HIGH FALSE POSITIVE RISK for WhatsApp/Signal rules !!
+# These platforms are widely used for legitimate purposes.
+# RECOMMENDED: Enable only on OT/ICS segments or air-gapped environments.
+# -----------------------------------------------------------------------------
+
+# WhatsApp Web API (OpenClaw WhatsApp channel uses baileys/whatsapp-web.js)
+# CAUTION: High FP risk on any network with normal WhatsApp usage
+alert dns any any -> any 53 (
+    msg:"OPENCLAW-SHADOW-AI WhatsApp API DNS - possible agent messaging channel";
+    dns.query; content:"web.whatsapp.com"; nocase;
+    sid:9001050; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Low, tag Shadow_AI;
+)
+
+# Discord API (OpenClaw Discord channel)
+# CAUTION: Very common legitimate use
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Discord API call - possible agent comms";
+    http.host; content:"discord.com"; nocase;
+    http.uri; content:"/api/webhooks/"; nocase;
+    flow:established,to_server;
+    sid:9001051; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Low, tag Shadow_AI;
+)
+
+# Slack incoming webhook (OpenClaw Slack channel)
+# CAUTION: Extremely common in enterprise — enable only on restricted segments
+alert http $HOME_NET any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW-SHADOW-AI Slack webhook - possible agent comms";
+    http.host; content:"hooks.slack.com"; nocase;
+    http.uri; content:"/services/"; nocase;
+    flow:established,to_server;
+    sid:9001052; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Internal, signature_severity Low, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 7: HTTP — OpenClaw skill/update infrastructure
+# Low false positive risk.
+# -----------------------------------------------------------------------------
+
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW skill marketplace HTTP request";
+    http.host; content:"skills.openclaw.ai"; nocase;
+    flow:established,to_server;
+    sid:9001060; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW update check HTTP request";
+    http.host; content:"openclaw.ai"; nocase;
+    flow:established,to_server;
+    sid:9001061; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+# NPM registry pull for openclaw package (install/update detection)
+alert http any any -> $EXTERNAL_NET any (
+    msg:"OPENCLAW npm package download detected";
+    http.host; content:"registry.npmjs.org"; nocase;
+    http.uri; content:"openclaw"; nocase;
+    flow:established,to_server;
+    sid:9001062; rev:1;
+    metadata:affected_product OpenClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+
+# -----------------------------------------------------------------------------
+# CATEGORY 8: Catch-all shadow AI / LLM API detection
+#
+# These rules are intentionally broad and will generate significant FPs
+# on general corporate networks. They are designed for:
+#   - CMMC/CUI environments
+#   - OT/ICS/manufacturing floor segments
+#   - Any network where ALL LLM API usage is unauthorized
+#
+# !! DO NOT enable on general IT networks without suppression lists !!
+# Comment out entire category if not applicable to your environment.
+# -----------------------------------------------------------------------------
+
+# Generic LLM provider domain — catches Anthropic, OpenAI, Mistral, etc.
+# CAUTION: Extremely broad. Use only on restricted segments.
+alert dns any any -> any 53 (
+    msg:"SHADOW-AI DNS lookup to known LLM API provider - verify authorization";
+    dns.query; content:"api.anthropic.com"; nocase;
+    sid:9001070; rev:1;
+    metadata:attack_target Client_Endpoint, deployment Internal,
+              signature_severity Informational, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"SHADOW-AI DNS lookup to OpenAI API";
+    dns.query; content:"api.openai.com"; nocase;
+    sid:9001071; rev:1;
+    metadata:attack_target Client_Endpoint, deployment Internal,
+              signature_severity Informational, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"SHADOW-AI DNS lookup to Mistral AI API";
+    dns.query; content:"api.mistral.ai"; nocase;
+    sid:9001072; rev:1;
+    metadata:attack_target Client_Endpoint, deployment Internal,
+              signature_severity Informational, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"SHADOW-AI DNS lookup to Together AI";
+    dns.query; content:"api.together.ai"; nocase;
+    sid:9001073; rev:1;
+    metadata:attack_target Client_Endpoint, deployment Internal,
+              signature_severity Informational, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"SHADOW-AI DNS lookup to Groq API";
+    dns.query; content:"api.groq.com"; nocase;
+    sid:9001074; rev:1;
+    metadata:attack_target Client_Endpoint, deployment Internal,
+              signature_severity Informational, tag Shadow_AI;
+)
+
+# IronClaw (Rust-based OpenClaw fork) — separate signatures
+alert dns any any -> any 53 (
+    msg:"IRONCLAW DNS lookup detected - OpenClaw Rust fork";
+    dns.query; content:"ironclaw"; nocase;
+    sid:9001080; rev:1;
+    metadata:affected_product IronClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+# PicoClaw (Raspberry Pi / embedded variant)
+alert dns any any -> any 53 (
+    msg:"PICOCLAW DNS lookup detected - embedded OpenClaw variant";
+    dns.query; content:"picoclaw"; nocase;
+    sid:9001081; rev:1;
+    metadata:affected_product PicoClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+alert dns any any -> any 53 (
+    msg:"ZEROCLAW DNS lookup detected - OpenClaw variant";
+    dns.query; content:"zeroclaw"; nocase;
+    sid:9001082; rev:1;
+    metadata:affected_product ZeroClaw, attack_target Client_Endpoint,
+              deployment Perimeter, signature_severity Major, tag Shadow_AI;
+)
+
+# =============================================================================
+# END OF RULES
+#
+# Deployment recommendations:
+#
+# TIER 1 - Enable everywhere, very low FP:
+#   9001000-9001004  (OpenClaw DNS)
+#   9001020-9001024  (OpenClaw HTTP patterns)
+#   9001030-9001032  (Port 18789 WebSocket)
+#   9001060-9001062  (Skill/update infrastructure)
+#   9001080-9001082  (Variant DNS)
+#
+# TIER 2 - Enable on corporate IT, moderate FP, tune with suppress rules:
+#   9001040-9001042  (Telegram Bot API)
+#   9001013          (OpenRouter)
+#
+# TIER 3 - Enable ONLY on OT/ICS/CMMC segments:
+#   9001010-9001012  (Anthropic API)
+#   9001011          (OpenAI API)
+#   9001050-9001052  (WhatsApp/Discord/Slack)
+#   9001070-9001074  (Generic LLM provider DNS)
+# =============================================================================
